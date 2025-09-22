@@ -1,184 +1,388 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📋 Vazifa Rejalashtiruvchi</title>
-
-  <!-- PWA uchun -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
-  <link rel="icon" href="icon-192.png" type="image/png">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online Vazifa Rejalashtiruvchi — Task Manager</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #f6f8fb;
-      color: #333;
-      transition: all 0.3s;
+    :root{
+      --bg:#f6f8fb; 
+      --card:#ffffff; 
+      --muted:#6b7280; 
+      --accent:#4f46e5; 
+      --accent-hover:#4338ca;
+      --success:#16a34a; 
+      --danger:#ef4444;
+      --shadow:0 8px 24px rgba(15,23,42,0.08);
+      --text:#0f172a;
+    }
+    body.dark{
+      --bg:#0f172a;
+      --card:#1e293b;
+      --muted:#94a3b8;
+      --accent:#6366f1;
+      --accent-hover:#4f46e5;
+      --success:#22c55e;
+      --danger:#f87171;
+      --shadow:0 8px 24px rgba(0,0,0,0.4);
+      --text:#f1f5f9;
     }
 
-    .container {
-      width: 90%;
-      max-width: 400px;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    *{box-sizing:border-box}
+    body{
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; 
+      background:linear-gradient(180deg,var(--bg),#eef2ff 60%); 
+      margin:0; 
+      color:var(--text);
+      transition:background 0.3s, color 0.3s;
     }
+    body.dark{background:linear-gradient(180deg,var(--bg),#1e293b 60%);}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
 
-    h1 {
-      text-align: center;
-    }
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    header h1{font-size:22px;margin:0;font-weight:600}
+    header p{color:var(--muted);margin:4px 0 0;font-size:14px}
 
-    .task-input {
-      display: flex;
-      margin-bottom: 15px;
-    }
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
 
-    .task-input input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px 0 0 8px;
-      outline: none;
+    /* Cards */
+    .card{
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.3s;
     }
+    .card:hover{transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,23,42,0.12);}
 
-    .task-input button {
-      padding: 10px 15px;
-      border: none;
-      background: #4f46e5;
-      color: white;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
+    /* Form elements */
+    .form-row{display:flex;gap:8px;margin-bottom:10px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type=text], textarea, select, input[type=date]{
+      width:100%;padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #e6e9f2;
+      background:transparent;
+      color:var(--text);
+      transition:border 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
     }
+    body.dark input, body.dark textarea, body.dark select{
+      border-color:#334155;
+      background:#0f172a;
+    }
+    input:focus, textarea:focus, select:focus{
+      border-color:var(--accent);
+      outline:none;
+      box-shadow:0 0 0 3px rgba(79,70,229,0.15);
+    }
+    textarea{min-height:80px;resize:vertical}
 
-    ul {
-      list-style: none;
-      padding: 0;
+    /* Buttons */
+    button{
+      background:var(--accent);
+      color:white;
+      padding:10px 14px;
+      border-radius:12px;
+      border:0;
+      cursor:pointer;
+      font-weight:500;
+      transition:background 0.2s, transform 0.1s;
     }
+    button:hover{background:var(--accent-hover);}
+    button:active{transform:scale(0.96);}
+    button.secondary{
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(79,70,229,0.25)
+    }
+    button.secondary:hover{background:rgba(79,70,229,0.06)}
 
-    li {
-      background: #f0f0f0;
-      margin: 6px 0;
-      padding: 10px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    /* Progress */
+    .progress{height:12px;background:#eef2ff;border-radius:999px;overflow:hidden}
+    body.dark .progress{background:#334155;}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);width:0%;transition:width 0.3s ease;}
+    .stats{display:flex;gap:10px;margin-top:12px}
+    .stat{flex:1;text-align:center;font-weight:500}
 
-    li.completed {
-      text-decoration: line-through;
-      color: #888;
-    }
+    /* Controls */
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    .search{flex:1;min-width:180px}
 
-    #themeToggle {
-      margin-top: 15px;
-      width: 100%;
-      padding: 10px;
-      background: #333;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    /* Task list */
+    .task-list{display:grid;gap:12px}
+    .task{
+      background:linear-gradient(180deg,var(--card),#fbfdff);
+      padding:14px;
+      border-radius:14px;
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      border:1px solid rgba(15,23,42,0.05);
+      transition:box-shadow 0.2s, transform 0.2s, background 0.3s;
     }
+    body.dark .task{background:linear-gradient(180deg,#1e293b,#0f172a);border-color:#334155;}
+    .task:hover{box-shadow:0 6px 16px rgba(15,23,42,0.08);transform:translateY(-2px);}
+    .task .left{width:36px;display:flex;align-items:center}
+    .checkbox{
+      width:20px;height:20px;
+      border-radius:6px;
+      border:1.5px solid #dbeafe;
+      display:inline-flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      font-size:14px;
+      transition:all 0.2s;
+    }
+    body.dark .checkbox{border-color:#475569;}
+    .checkbox.checked{background:var(--success);border-color:var(--success);color:white}
+    .task .body{flex:1}
+    .task h4{margin:0 0 6px 0;font-size:15px;font-weight:600}
+    .task p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+    .meta{display:flex;gap:8px;margin-top:8px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
+    .tag{padding:4px 10px;border-radius:999px;background:#f1f5f9;font-size:12px;font-weight:500}
+    body.dark .tag{background:#334155;color:#cbd5e1;}
+    .actions{display:flex;gap:6px}
+    .actions button{background:transparent;border:0;cursor:pointer;color:var(--muted);font-size:16px;transition:color 0.2s;}
+    .actions button:hover{color:var(--danger)}
 
-    /* 🌙 Dark Mode */
-    body.dark {
-      background: #1e1e1e;
-      color: #ddd;
-    }
+    .empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
 
-    body.dark .container {
-      background: #2a2a2a;
-    }
-
-    body.dark li {
-      background: #444;
-    }
-
-    body.dark #themeToggle {
-      background: #f6f8fb;
-      color: #000;
-    }
+    footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📋 Vazifalar</h1>
-    
-    <div class="task-input">
-      <input type="text" id="taskInput" placeholder="Yangi vazifa kiriting...">
-      <button onclick="addTask()">➕ Qo‘shish</button>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Online Vazifa Rejalashtiruvchi</h1>
+        <p>Oddiy, professional va responsiv task manager — portfolio uchun tayyor.</p>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button id="toggleTheme" class="secondary">🌙 Dark Mode</button>
+        <div class="small">LocalStorage asosida saqlanadi • Responsive</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div>
+        <div class="card" id="formCard">
+          <h3 style="margin-top:0">Yangi vazifa qo'shish</h3>
+          <div>
+            <label for="title">Vazifa nomi</label>
+            <input id="title" type="text" placeholder="Masalan: Portfolio sahifasini tugatish" />
+          </div>
+          <div>
+            <label for="desc">Tavsif (ixtiyoriy)</label>
+            <textarea id="desc" placeholder="Vazifa haqida qisqacha..."></textarea>
+          </div>
+          <div class="form-row">
+            <div style="flex:1">
+              <label for="date">Muddat</label>
+              <input id="date" type="date" />
+            </div>
+            <div style="width:120px">
+              <label for="priority">Ustuvorlik</label>
+              <select id="priority">
+                <option value="low">Past</option>
+                <option value="normal" selected>O'rta</option>
+                <option value="high">Yuqori</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="category">Kategoriya</label>
+            <input id="category" type="text" placeholder="Masalan: Ish, O'qish, Shaxsiy" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="addBtn">Vazifa qo'shish</button>
+            <button id="clearBtn" class="secondary">Formani tozalash</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4 style="margin:0 0 8px 0">Progress</h4>
+          <div class="progress" aria-hidden><i id="progressBar"></i></div>
+          <div class="stats">
+            <div class="stat"><div id="totalCount">0</div><div class="small">Jami</div></div>
+            <div class="stat"><div id="doneCount">0</div><div class="small">Bajarilgan</div></div>
+            <div class="stat"><div id="pendingCount">0</div><div class="small">Qolgan</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="card">
+          <div class="controls">
+            <input id="search" class="search" type="text" placeholder="Vazifalarda qidirish..." />
+            <select id="filterCategory">
+              <option value="all">Barchasi</option>
+            </select>
+            <select id="filterPriority">
+              <option value="all">Hammasi</option>
+              <option value="low">Past</option>
+              <option value="normal">O'rta</option>
+              <option value="high">Yuqori</option>
+            </select>
+            <input id="viewDate" type="date" title="Kun bo'yicha ko'rish" />
+            <button id="resetFilters" class="secondary">Filtrni tiwklash</button>
+          </div>
+
+          <div class="task-list" id="taskList"></div>
+          <div id="empty" class="empty" style="display:none">Hozircha vazifa yo'q — yangi vazifa qo'shing!</div>
+        </div>
+      </div>
     </div>
 
-    <ul id="taskList"></ul>
-
-    <button id="themeToggle">🌙 Dark Mode</button>
+    <footer>Made with ❤️ — Dark Mode qo‘shildi!</footer>
   </div>
 
-  <script>
-    const taskInput = document.getElementById("taskInput");
-    const taskList = document.getElementById("taskList");
-    const themeToggle = document.getElementById("themeToggle");
+<script>
+  // Query helper
+  const q = (s) => document.querySelector(s);
 
-    // ✅ Vazifa qo‘shish
-    function addTask() {
-      if (taskInput.value.trim() === "") return;
+  const titleEl = q('#title'), descEl = q('#desc'), dateEl = q('#date'), priorityEl = q('#priority'), categoryEl = q('#category');
+  const addBtn = q('#addBtn'), clearBtn = q('#clearBtn');
+  const taskListEl = q('#taskList'), emptyEl = q('#empty');
+  const totalCountEl = q('#totalCount'), doneCountEl = q('#doneCount'), pendingCountEl = q('#pendingCount');
+  const progressBarEl = q('#progressBar');
+  const searchEl = q('#search'), filterCategoryEl = q('#filterCategory'), filterPriorityEl = q('#filterPriority'), viewDateEl = q('#viewDate'), resetFiltersBtn = q('#resetFilters');
+  const toggleThemeBtn = q('#toggleTheme');
 
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${taskInput.value}</span>
-        <button onclick="deleteTask(this)">❌</button>
-      `;
-      li.onclick = () => li.classList.toggle("completed");
+  let tasks = [];
+  let editId = null;
 
-      taskList.appendChild(li);
-      taskInput.value = "";
-      saveTasks();
-    }
+  // THEME toggle
+  function applyTheme(mode){
+    if(mode === 'dark'){ document.body.classList.add('dark'); toggleThemeBtn.textContent = "☀️ Light Mode"; }
+    else { document.body.classList.remove('dark'); toggleThemeBtn.textContent = "🌙 Dark Mode"; }
+    localStorage.setItem('theme', mode);
+  }
+  function initTheme(){
+    const saved = localStorage.getItem('theme') || 'light';
+    applyTheme(saved);
+  }
+  toggleThemeBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.contains('dark');
+    applyTheme(isDark ? 'light' : 'dark');
+  });
 
-    // ❌ Vazifani o‘chirish
-    function deleteTask(btn) {
-      btn.parentElement.remove();
-      saveTasks();
-    }
+  function uid(){return 't_'+Math.random().toString(36).slice(2,9)}
 
-    // 💾 LocalStorage ga saqlash
-    function saveTasks() {
-      localStorage.setItem("tasks", taskList.innerHTML);
-    }
+  function seedDemoTasks(){
+    const today = new Date();
+    const in3 = new Date(today); in3.setDate(today.getDate() + 3);
+    const demo = [
+      { id: uid(), title: "Portfolio sahifasini tugatish", desc: "Hero va projects bo'limini yakunlash", date: null, priority: "high", category: "Ish", done: false, created: new Date().toISOString() },
+      { id: uid(), title: "JavaScript asoslari o'qish", desc: "Closures va scope qayta o'rganish", date: in3.toISOString().slice(0,10), priority: "normal", category: "O'qish", done: false, created: new Date().toISOString() },
+      { id: uid(), title: "Uy ishlari", desc: "Dokumentlarni tartiblash", date: null, priority: "low", category: "Shaxsiy", done: false, created: new Date().toISOString() }
+    ];
+    tasks = demo;
+    saveTasks();
+  }
 
-    // 🔄 LocalStorage dan yuklash
-    function loadTasks() {
-      taskList.innerHTML = localStorage.getItem("tasks") || "";
-    }
-    loadTasks();
+  function loadTasks(){
+    const raw = localStorage.getItem('tasks_v1');
+    try{ tasks = raw ? JSON.parse(raw) : []; }catch(e){ tasks = []; }
+    if(raw === null){ seedDemoTasks(); }
+  }
+  function saveTasks(){localStorage.setItem('tasks_v1', JSON.stringify(tasks))}
 
-    // 🌙 Dark Mode
-    themeToggle.onclick = () => {
-      document.body.classList.toggle("dark");
-      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  function addTask(){
+    const title = titleEl.value.trim();
+    if(!title) return alert("Vazifa nomi bo'sh bo'lishi mumkin emas");
+    const t = {
+      id: editId || uid(),
+      title,
+      desc: descEl.value.trim(),
+      date: dateEl.value || null,
+      priority: priorityEl.value,
+      category: categoryEl.value.trim() || 'Boshqa',
+      done: false,
+      created: new Date().toISOString()
     };
+    if(editId){
+      tasks = tasks.map(x => x.id === editId ? {...x, ...t, id:editId} : x);
+      editId = null; addBtn.textContent = "Vazifa qo'shish";
+    } else tasks.unshift(t);
+    saveTasks(); render(); clearForm();
+  }
 
-    // 🔄 Oxirgi tanlovni tiklash
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.classList.add("dark");
+  function clearForm(){ titleEl.value = ''; descEl.value = ''; dateEl.value = ''; priorityEl.value = 'normal'; categoryEl.value = ''; editId = null; addBtn.textContent = "Vazifa qo'shish"; }
+
+  function render(){
+    taskListEl.innerHTML = '';
+    const qText = (searchEl.value || '').trim().toLowerCase();
+    const catFilter = filterCategoryEl.value;
+    const prFilter = filterPriorityEl.value;
+    const viewDate = viewDateEl.value;
+
+    let filtered = tasks.slice();
+    if(qText) filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(qText) || ((t.desc||'').toLowerCase().includes(qText)) || ((t.category||'').toLowerCase().includes(qText)));
+    if(catFilter !== 'all') filtered = filtered.filter(t => (t.category||'Boshqa') === catFilter);
+    if(prFilter !== 'all') filtered = filtered.filter(t => t.priority === prFilter);
+    if(viewDate) filtered = filtered.filter(t => t.date === viewDate);
+
+    if(filtered.length === 0){ emptyEl.style.display = 'block'; } else { emptyEl.style.display = 'none'; }
+
+    for(const t of filtered){
+      const item = document.createElement('div'); item.className = 'task';
+      const left = document.createElement('div'); left.className = 'left';
+      const cb = document.createElement('div'); cb.className = 'checkbox' + (t.done ? ' checked' : ''); cb.innerHTML = t.done ? '✓' : '';
+      cb.addEventListener('click', () => toggleDone(t.id));
+      left.appendChild(cb);
+
+      const body = document.createElement('div'); body.className = 'body';
+      const h = document.createElement('h4'); h.textContent = t.title + (t.done ? ' (Bajarilgan)' : '');
+      if(t.done) h.style.textDecoration = 'line-through';
+      const p = document.createElement('p'); p.textContent = t.desc || '';
+
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const tagCat = document.createElement('span'); tagCat.className = 'tag'; tagCat.textContent = t.category||'Boshqa';
+      const tagPr = document.createElement('span'); tagPr.className = 'tag'; tagPr.textContent = {low:'Past',normal:"O'rta",high:"Yuqori"}[t.priority]||t.priority;
+      meta.append(tagCat, tagPr);
+      if(t.date){ const due = document.createElement('span'); due.textContent = "⏰ " + t.date; meta.appendChild(due); }
+
+      body.append(h,p,meta);
+
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const editBtn = document.createElement('button'); editBtn.innerHTML='✏️'; editBtn.title="Tahrirlash";
+      editBtn.addEventListener('click', () => editTask(t.id));
+      const delBtn = document.createElement('button'); delBtn.innerHTML='🗑️'; delBtn.title="O'chirish";
+      delBtn.addEventListener('click', () => deleteTask(t.id));
+      actions.append(editBtn, delBtn);
+
+      item.append(left,body,actions);
+      taskListEl.appendChild(item);
     }
 
-    // 📲 Service Worker ishga tushirish
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker ro‘yxatdan o‘tdi ✅"))
-        .catch(err => console.log("SW xato:", err));
-    }
-  </script>
+    totalCountEl.textContent = tasks.length;
+    const done = tasks.filter(t=>t.done).length;
+    doneCountEl.textContent = done;
+    pendingCountEl.textContent = tasks.length - done;
+    progressBarEl.style.width = tasks.length ? (done/tasks.length*100).toFixed(0)+'%' : '0%';
+
+    const cats = Array.from(new Set(tasks.map(t=>t.category||'Boshqa')));
+    filterCategoryEl.innerHTML = '<option value="all">Barchasi</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+
+  function toggleDone(id){ tasks = tasks.map(t=>t.id===id?{...t,done:!t.done}:t); saveTasks(); render(); }
+  function deleteTask(id){ if(confirm("Haqiqatan ham o'chirilsinmi?")){ tasks = tasks.filter(t=>t.id!==id); saveTasks(); render(); } }
+  function editTask(id){ const t = tasks.find(x=>x.id===id); if(!t) return; titleEl.value=t.title; descEl.value=t.desc; dateEl.value=t.date||''; priorityEl.value=t.priority; categoryEl.value=t.category; editId=t.id; addBtn.textContent="Saqlash"; window.scrollTo({top:0,behavior:'smooth'}); }
+
+  // Bind
+  addBtn.addEventListener('click', addTask);
+  clearBtn.addEventListener('click', clearForm);
+  searchEl.addEventListener('input', render);
+  filterCategoryEl.addEventListener('change', render);
+  filterPriorityEl.addEventListener('change', render);
+  // viewDateEl.addEventListener('change', render);
+  resetFiltersBtn.addEventListener('click', ()=>{ searchEl.value=''; filterCategoryEl.value='all'; filterPriorityEl.value='all'; viewDateEl.value=''; render(); });
+
+  // INIT
+  initTheme();
+  loadTasks(); render();
+</script>
 </body>
 </html>
